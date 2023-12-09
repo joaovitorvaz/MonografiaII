@@ -98,14 +98,12 @@ def exibir_tabela_personalizada(df):
 
 # URL do Google Sheets
 url = 'https://docs.google.com/spreadsheets/d/1IfRgUY1vM4Xb7kRm9T4II-V8Y4D_OYWsms4v0fOtqhI/export?format=csv'
-
-response = requests.get(url)
-content = response.content
+dados = pd.read_csv(url)
 
 caminho_arquivo_saida = 'dadosComRacismo.csv'
 
 with open(caminho_arquivo_saida, 'wb') as file:
-    file.write(content)
+    file.write(dados)
 
 df = pd.read_csv(caminho_arquivo_saida)
 
