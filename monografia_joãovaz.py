@@ -263,6 +263,12 @@ estilo_tabela = """
 
 parametros_nb = {'alpha': [0.001, 0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]}
 parametros_svm = {'C': [0.1, 1, 10], 'class_weight': ['balanced', None]}
+# Defina os parâmetros que você quer testar
+parametros_rf = {
+    'n_estimators': [100, 200, 500],
+    'max_depth': [None, 10, 20, 30],
+    'criterion': ['gini', 'entropy']
+}
 
 def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
     num_folds = 10
@@ -293,7 +299,20 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
     if modelo_escolhido == "RL":
         modelo = LogisticRegression(class_weight='balanced', random_state=42)
     elif modelo_escolhido == "RF":
-        modelo = RandomForestClassifier(n_estimators=10, max_features='sqrt', random_state=42)
+        # Crie uma instância do modelo
+        rf = RandomForestClassifier(random_state=42)
+
+        # Crie a instância do GridSearchCV
+        grid_search_rf = GridSearchCV(rf, parametros_rf, cv=num_folds, scoring='accuracy')
+
+        # Ajuste o GridSearchCV aos seus dados
+        grid_search_rf.fit(X_treino_sampled, y_treino_sampled)
+
+        # Use os melhores parâmetros encontrados para o modelo
+        modelo = RandomForestClassifier(n_estimators=grid_search_rf.best_params_['n_estimators'], 
+                                        max_depth=grid_search_rf.best_params_['max_depth'],
+                                        criterion=grid_search_rf.best_params_['criterion'],
+                                        random_state=42, n_jobs=-1)
     elif modelo_escolhido == "SVM":
         modelo = LinearSVC()
         grid_search = GridSearchCV(modelo, parametros_svm, cv=num_folds, scoring='f1')
