@@ -216,20 +216,13 @@ df.to_csv('arquivoSaida.csv', index=False)
 
 
 
-"""##Regressão Logística, Nayve Bayes e SVM##
-
-####Para execução de cada modelo, os comandos abaixo:####
-
-
-*   Regressão Logística: "RL"
-*   Naive Bayes: "NB"
-*   Support Vector Machine: "SVM"
-
-####Acurácia e F1 Score (Undersampling e Oversampling)####
-"""
-
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+
 # Todas as variáveis do código
 dados = pd.read_csv('arquivoSaida.csv')
 tweets = dados['TEXT_TOKENIZACAO'].tolist()
@@ -262,13 +255,8 @@ estilo_tabela = """
 """
 
 parametros_nb = {'alpha': [0.001, 0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]}
-parametros_svm = {'C': [0.1, 1, 10], 'class_weight': ['balanced', None]}
-# Defina os parâmetros que você quer testar
-parametros_rf = {
-    'n_estimators': [100, 200, 500],
-    'max_depth': [None, 10, 20, 30],
-    'criterion': ['gini', 'entropy']
-}
+parametros_svm = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001], 'kernel': ['rbf', 'poly', 'sigmoid']}
+parametros_rl = {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0, 1000.0]}
 
 def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
     num_folds = 10
@@ -297,49 +285,51 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
         raise ValueError("Método de amostragem desconhecido. Escolha 'undersampling' ou 'oversampling'.")
 
     if modelo_escolhido == "RL":
-        modelo = LogisticRegression(class_weight='balanced', random_state=42)
-    elif modelo_escolhido == "RF":
-        # Crie uma instância do modelo
-        rf = RandomForestClassifier(random_state=42)
-
-        # Crie a instância do GridSearchCV
-        grid_search_rf = GridSearchCV(rf, parametros_rf, cv=num_folds, scoring='accuracy')
-
-        # Ajuste o GridSearchCV aos seus dados
-        grid_search_rf.fit(X_treino_sampled, y_treino_sampled)
-
-        # Use os melhores parâmetros encontrados para o modelo
-        modelo = RandomForestClassifier(n_estimators=grid_search_rf.best_params_['n_estimators'], 
-                                        max_depth=grid_search_rf.best_params_['max_depth'],
-                                        criterion=grid_search_rf.best_params_['criterion'],
-                                        random_state=42, n_jobs=-1)
+        modelo = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
+        grid_search = GridSearchCV(modelo, parametros_rl, cv=num_folds, scoring='f1')
+        grid_search.fit(X_treino_sampled, y_treino_sampled)
+        modelo = LogisticRegression(C=grid_search.best_params_['C'], class_weight='balanced', random_state=42, max_iter=1000)
+    elif modelo_escolhido == "NB":
+        modelo = GaussianNB()
+        X_treino_sampled = X_treino_sampled.toarray()
     elif modelo_escolhido == "SVM":
-        modelo = LinearSVC()
+        modelo = SVC()
         grid_search = GridSearchCV(modelo, parametros_svm, cv=num_folds, scoring='f1')
         grid_search.fit(X_treino_sampled, y_treino_sampled)
-        modelo = LinearSVC(C=grid_search.best_params_['C'], class_weight=grid_search.best_params_['class_weight'])
+        modelo = SVC(C=grid_search.best_params_['C'], gamma=grid_search.best_params_['gamma'], kernel=grid_search.best_params_['kernel'])
     else:
-        raise ValueError("Modelo desconhecido. Escolha 'RL' para Regressão Logística, 'RF' para Random Forest ou 'SVM' para Support Vector Machine.")
+        raise ValueError("Modelo desconhecido. Escolha 'RL' para Regressão Logística, 'NB' para Naive Bayes ou 'SVM' para Support Vector Machine.")
 
     modelo.fit(X_treino_sampled, y_treino_sampled)
-
+    from sklearn.metrics import mean_squared_error
+    # Calcular o erro quadrático médio para os conjuntos de treinamento e teste
+   
+    # Fazer previsões no conjunto de treinamento
     if modelo_escolhido == "NB":
-        y_pred = modelo.predict(X_teste.toarray())
+        y_pred_treino = modelo.predict(X_treino_sampled)
+        y_pred_teste = modelo.predict(X_teste)
     else:
-        y_pred = modelo.predict(X_teste)
+        y_pred_treino = modelo.predict(X_treino_sampled)
+        y_pred_teste = modelo.predict(X_teste)
 
-    acuracia = accuracy_score(y_teste, y_pred)
-    f1 = f1_score(y_teste, y_pred)
+    # Calcular o erro quadrático médio para os conjuntos de treinamento e teste
+    erro_treino = mean_squared_error(y_treino_sampled, y_pred_treino)
+    erro_teste = mean_squared_error(y_teste, y_pred_teste)
+
+    print(f'Erro de treinamento: {erro_treino}')
+    print(f'Erro de teste: {erro_teste}')
+
+    acuracia = accuracy_score(y_teste, y_pred_teste)
+    f1 = f1_score(y_teste, y_pred_teste)
 
     cv_scores_accuracy = cross_val_score(modelo, X_treino_sampled, y_treino_sampled, cv=num_folds, scoring='accuracy')
     cv_scores_f1 = cross_val_score(modelo, X_treino_sampled, y_treino_sampled, cv=num_folds, scoring='f1')
 
     return cv_scores_accuracy, cv_scores_f1, acuracia, f1
 
-modelo_escolhido = input("Digite 'RL', 'RF' ou 'SVM': ")
+modelo_escolhido = input("Digite 'RL', 'NB' ou 'SVM': ")
 print()
 print("Em execução...")
-resultados = []
 
 for ngram_range in valores_ngrama:
     cv_scores_accuracy_under, cv_scores_f1_under, acuracia_under, f1_under = executar_experimento(ngram_range, modelo_escolhido, "undersampling")
@@ -350,22 +340,21 @@ for ngram_range in valores_ngrama:
     mean_cv_accuracy_over = np.mean(cv_scores_accuracy_over)
     mean_cv_f1_over = np.mean(cv_scores_f1_over)
 
-    resultado = {
-        'ngram': ngram_range,
-        'acuracia_under': mean_cv_accuracy_under,
-        'f1_under': mean_cv_f1_under,
-        'acuracia_over': mean_cv_accuracy_over,
-        'f1_over': mean_cv_f1_over
-    }
+    media_acuracia_under.append(mean_cv_accuracy_under)
+    media_f1_under.append(mean_cv_f1_under)
+    media_acuracia_over.append(mean_cv_accuracy_over)
+    media_f1_over.append(mean_cv_f1_over)
 
-    resultados.append(resultado)
+table_data = []
+for i in range(len(valores_ngrama)):
+    ngram_str = f"({valores_ngrama[i][0]}, {valores_ngrama[i][1]})"
+    table_data.append([ngram_str, media_acuracia_under[i], media_acuracia_over[i], media_f1_under[i], media_f1_over[i]])
 
-for resultado in resultados:
-    print(f"N-grama: {resultado['ngram']}")
-    print(f"Acurácia (Undersampled): {resultado['acuracia_under']}")
-    print(f"F1 Score (Undersampled): {resultado['f1_under']}")
-    print(f"Acurácia (Oversampled): {resultado['acuracia_over']}")
-    print(f"F1 Score (Oversampled): {resultado['f1_over']}")
-    print()
+table_headers = ['N-grama', 'Acurácia (Undersampled)', 'Acurácia (Oversampled)', 'F1 Score (Undersampled)', 'F1 Score (Oversampled)']
+
+df = pd.DataFrame(table_data, columns=table_headers)
+
+tabela_com_estilo = f"{estilo_tabela}{df.to_html(index=False)}"
+display(HTML(tabela_com_estilo))
 
 print("Execução concluída!")
