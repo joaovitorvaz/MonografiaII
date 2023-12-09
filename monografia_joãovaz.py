@@ -240,7 +240,7 @@ estilo_tabela = """
 </style>
 """
 
-parametros_nb = {'alpha': [0.001, 0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]}
+parametros_nb = {'alpha': [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0, 1000.0]}
 parametros_svm = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001], 'kernel': ['rbf', 'poly', 'sigmoid']}
 parametros_rl = {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0, 1000.0]}
 
