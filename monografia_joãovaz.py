@@ -124,7 +124,7 @@ df = pd.read_csv(data)
 # Função para limpar os dados
 def limpar_dados(texto):
     texto = str(texto)
-    texto = ftfy.fix_text(texto)  # Corrige erros de codificação de texto
+   # texto = ftfy.fix_text(texto)  # Corrige erros de codificação de texto
     texto = texto.split("#")[0]
     texto = texto.split("https://")[0]
     texto = re.sub(r'k{2,}', '', texto) # Remover a sequência  de k's
