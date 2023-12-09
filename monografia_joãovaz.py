@@ -16,9 +16,6 @@ Orientador: Jadson Gertrudes
 ##Pacotes##
 """
 
-!pip install pysinonimos
-!pip install unidecode
-!pip install ftfy
 
 """## Bibliotecas ##
 
