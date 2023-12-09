@@ -96,15 +96,8 @@ def exibir_tabela_personalizada(df):
 
 """
 
-# URL do Google Sheets
-url = 'https://docs.google.com/spreadsheets/d/1IfRgUY1vM4Xb7kRm9T4II-V8Y4D_OYWsms4v0fOtqhI/export?format=csv'
-dados = pd.read_csv(url)
-
-caminho_arquivo_saida = 'dadosComRacismo.csv'
-
-with open(caminho_arquivo_saida, 'wb') as file:
-    file.write(dados)
-
+# arquivo
+caminho_arquivo_saida = 'dadosComRacismo.csv'  # Atualize com o caminho para o seu arquivo CSV
 df = pd.read_csv(caminho_arquivo_saida)
 
 # Filtra as linhas com valor igual a 1 na coluna 'RACISM'
