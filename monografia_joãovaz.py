@@ -24,7 +24,7 @@ Orientador: Jadson Gertrudes
 import nltk
 import csv
 import re
-import ftfy
+#import ftfy
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from nltk.corpus import stopwords
