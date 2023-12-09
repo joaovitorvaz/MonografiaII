@@ -29,7 +29,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from IPython.display import display, HTML
 import requests
 from io import StringIO
 import pandas as pd
@@ -40,7 +39,6 @@ from sklearn.utils import resample
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
-from IPython.display import display, HTML
 from sklearn.model_selection import cross_val_score
 import numpy as np
 
@@ -295,7 +293,7 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
     # Fazer previsões no conjunto de treinamento
     if modelo_escolhido == "NB":
         y_pred_treino = modelo.predict(X_treino_sampled)
-        y_pred_teste = modelo.predict(X_teste)
+        y_pred_teste = modelo.predict(X_teste.toarray())
     else:
         y_pred_treino = modelo.predict(X_treino_sampled)
         y_pred_teste = modelo.predict(X_teste)
