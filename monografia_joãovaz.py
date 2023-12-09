@@ -28,33 +28,21 @@ import re
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from nltk.corpus import stopwords
-from sklearn.svm import LinearSVC
 from nltk.tokenize import word_tokenize
-from sklearn.feature_selection import SelectKBest, chi2
 from IPython.display import display, HTML
-from pysinonimos.sinonimos import Search, historic
 import requests
-from scrapy.selector import Selector as scp
-from unicodedata import normalize
-from nltk import bigrams
-from nltk.probability import FreqDist
-from unidecode import unidecode
-from collections import Counter
-from nltk import bigrams, trigrams, ngrams
 from io import StringIO
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.utils import resample
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from IPython.display import display, HTML
 from sklearn.model_selection import cross_val_score
 import numpy as np
-from sklearn.naive_bayes import MultinomialNB
 
 """##Download StopWords em português##"""
 
