@@ -333,16 +333,11 @@ for ngram_range in valores_ngrama:
     media_acuracia_over.append(mean_cv_accuracy_over)
     media_f1_over.append(mean_cv_f1_over)
 
-table_data = []
-for i in range(len(valores_ngrama)):
-    ngram_str = f"({valores_ngrama[i][0]}, {valores_ngrama[i][1]})"
-    table_data.append([ngram_str, media_acuracia_under[i], media_acuracia_over[i], media_f1_under[i], media_f1_over[i]])
-
-table_headers = ['N-grama', 'Acurácia (Undersampled)', 'Acurácia (Oversampled)', 'F1 Score (Undersampled)', 'F1 Score (Oversampled)']
-
-df = pd.DataFrame(table_data, columns=table_headers)
-
-tabela_com_estilo = f"{estilo_tabela}{df.to_html(index=False)}"
-display(HTML(tabela_com_estilo))
+    print(f"N-grama: {ngram_range}")
+    print(f"Média da Acurácia (Undersampled): {mean_cv_accuracy_under}")
+    print(f"Média da Acurácia (Oversampled): {mean_cv_accuracy_over}")
+    print(f"Média do F1 Score (Undersampled): {mean_cv_f1_under}")
+    print(f"Média do F1 Score (Oversampled): {mean_cv_f1_over}")
+    print()
 
 print("Execução concluída!")
