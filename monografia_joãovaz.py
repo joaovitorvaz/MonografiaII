@@ -110,9 +110,6 @@ df_filtered.to_csv(caminho_arquivo_saida, index=False)
 
 print('Arquivo CSV "dadosComRacismo.csv" criado com sucesso!')
 
-from google.colab import drive
-drive.mount('/content/drive')
-
 """##Removendo os usuários, sequências de RT, símbolos, números, pontuação e links da planilha com todos os dados##
 
 """
