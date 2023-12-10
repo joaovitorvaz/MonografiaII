@@ -201,13 +201,11 @@ exibir_tabela_personalizada(df)
 df.to_csv('arquivoSaida.csv', index=False)
 
 
-
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import cross_val_score
 
 # Todas as variáveis do código
 dados = pd.read_csv('arquivoSaida.csv')
@@ -223,26 +221,9 @@ media_acuracia_under = []
 media_f1_under = []
 media_acuracia_over = []
 media_f1_over = []
-estilo_tabela = """
-<style>
-    th {
-        font-weight: bold;
-        text-align: center;
-        background-color: #f2f2f2;
-    }
-    td {
-        text-align: center;
-    }
-    tr:nth-child(even) {
-       text-align: center;
-        background-color: #f9f9f9;
-    }
-</style>
-"""
 
-parametros_nb = {'alpha': [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0, 1000.0]}
-parametros_svm = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001], 'kernel': ['rbf', 'poly', 'sigmoid']}
 parametros_rl = {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0, 1000.0]}
+from sklearn.linear_model import LogisticRegressionCV
 
 def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
     num_folds = 10
@@ -260,6 +241,7 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
         smote = SMOTE(random_state=42)
         X_treino_oversampled, y_treino_oversampled = smote.fit_resample(X_treino, y_treino)
         X_treino_sampled, y_treino_sampled = X_treino_oversampled, y_treino_oversampled
+
     elif sampling_method == "oversampling":
         minoritaria_oversampled = resample(minoritaria, replace=True, n_samples=len(majoritaria), random_state=42)
         dados_balanceados = pd.concat([majoritaria, minoritaria_oversampled])
@@ -267,6 +249,7 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
         rótulos_balanceados = dados_balanceados['RACISM'].tolist()
         X_balanceado = vetorizador.fit_transform(tweets_balanceados)
         X_treino_sampled, _, y_treino_sampled, _ = train_test_split(X_balanceado, rótulos_balanceados, test_size=0.3, random_state=42)
+
     else:
         raise ValueError("Método de amostragem desconhecido. Escolha 'undersampling' ou 'oversampling'.")
 
@@ -274,29 +257,17 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
         modelo = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
         grid_search = GridSearchCV(modelo, parametros_rl, cv=num_folds, scoring='f1')
         grid_search.fit(X_treino_sampled, y_treino_sampled)
-        modelo = LogisticRegression(C=grid_search.best_params_['C'], class_weight='balanced', random_state=42, max_iter=1000)
-    elif modelo_escolhido == "NB":
-        modelo = GaussianNB()
-        X_treino_sampled = X_treino_sampled.toarray()
-    elif modelo_escolhido == "SVM":
-        modelo = SVC()
-        grid_search = GridSearchCV(modelo, parametros_svm, cv=num_folds, scoring='f1')
-        grid_search.fit(X_treino_sampled, y_treino_sampled)
-        modelo = SVC(C=grid_search.best_params_['C'], gamma=grid_search.best_params_['gamma'], kernel=grid_search.best_params_['kernel'])
+        # Use LogisticRegressionCV para aplicar regularização e validação cruzada
+        modelo = LogisticRegressionCV(Cs=parametros_rl['C'], cv=num_folds, scoring='f1', class_weight='balanced', random_state=42, max_iter=1000)
+
     else:
-        raise ValueError("Modelo desconhecido. Escolha 'RL' para Regressão Logística, 'NB' para Naive Bayes ou 'SVM' para Support Vector Machine.")
+        raise ValueError("Modelo desconhecido. Escolha 'RL' para Regressão Logística.")
 
     modelo.fit(X_treino_sampled, y_treino_sampled)
-    from sklearn.metrics import mean_squared_error
-    # Calcular o erro quadrático médio para os conjuntos de treinamento e teste
-   
+
     # Fazer previsões no conjunto de treinamento
-    if modelo_escolhido == "NB":
-        y_pred_treino = modelo.predict(X_treino_sampled)
-        y_pred_teste = modelo.predict(X_teste.toarray())
-    else:
-        y_pred_treino = modelo.predict(X_treino_sampled)
-        y_pred_teste = modelo.predict(X_teste)
+    y_pred_treino = modelo.predict(X_treino_sampled)
+    y_pred_teste = modelo.predict(X_teste)
 
     # Calcular o erro quadrático médio para os conjuntos de treinamento e teste
     erro_treino = mean_squared_error(y_treino_sampled, y_pred_treino)
@@ -313,7 +284,7 @@ def executar_experimento(ngram_range, modelo_escolhido, sampling_method):
 
     return cv_scores_accuracy, cv_scores_f1, acuracia, f1
 
-modelo_escolhido = input("Digite 'RL', 'NB' ou 'SVM': ")
+modelo_escolhido = input("Digite 'RL': ")
 print()
 print("Em execução...")
 
